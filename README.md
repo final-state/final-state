@@ -10,27 +10,29 @@ yarn add final-state
 npm install final-state
 ```
 
+`final-state` is written in `Typescript`, so you don't need to find a type definition for it.
+
 ## Basic Example
 
 ```javascript
-import Store from "final-state";
+import Store from 'final-state';
 
 // Define initial state
 const initialState = {
   a: 1,
-  b: "good"
+  b: 'good',
 };
 
 // Create store instance
 const store = new Store(initialState);
 
 // Print state
-console.log("INITIAL STATE:", store.getState());
+console.log('INITIAL STATE:', store.getState());
 
 // Define a listener to listen the changes of state
 function listener() {
   // Print state
-  console.log("IN SUBSCRIBE LISTENER:", store.getState());
+  console.log('IN SUBSCRIBE LISTENER:', store.getState());
 }
 
 // Subscribe the changes of state
@@ -45,7 +47,7 @@ function incrementAction(draftState) {
 store.dispatch(incrementAction);
 
 // Print state
-console.log("CURRENT STATE:", store.getState());
+console.log('CURRENT STATE:', store.getState());
 
 store.unSubscribe(listener);
 
@@ -90,14 +92,14 @@ It's inner implementation is:
 
 ```javascript
 // pseudocode
-import { produce } from "immer";
+import { produce } from 'immer';
 produce(state, action);
 ```
 
 ## Use with `typescript`
 
 ```typescript
-import Store, { Action } from "final-state";
+import Store, { Action } from 'final-state';
 
 // Define state shape
 interface State {
@@ -108,19 +110,19 @@ interface State {
 // Define initial state
 const initialState: State = {
   a: 1,
-  b: "good"
+  b: 'good',
 };
 
 // Create store instance
 const store = new Store<State>(initialState);
 
 // Print state
-console.log("INITIAL STATE:", store.getState());
+console.log('INITIAL STATE:', store.getState());
 
 // Define a listener to listen the changes of state
 function listener() {
   // Print state
-  console.log("IN SUBSCRIBE LISTENER:", store.getState());
+  console.log('IN SUBSCRIBE LISTENER:', store.getState());
 }
 
 // Subscribe the changes of state
@@ -135,7 +137,7 @@ const incrementAction: Action<State> = draftState => {
 store.dispatch(incrementAction);
 
 // Print state
-console.log("CURRENT STATE:", store.getState());
+console.log('CURRENT STATE:', store.getState());
 
 store.unSubscribe(listener);
 

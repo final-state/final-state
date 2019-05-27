@@ -1,0 +1,43 @@
+{
+  "name": "final-state",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "author": "yuanqiulee@gmail.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/final-state/final-state"
+  },
+  "homepage": "https://final-state.github.io/final-state",
+  "scripts": {
+    "lint": "eslint -c .eslintrc.js --ext ts --fix src",
+    "build": "yarn lint && tsc",
+    "pub": "yarn publish --no-git-tag-version",
+    "test": "jest"
+  },
+  "sideEffects": false,
+  "devDependencies": {
+    "@babel/core": "^7.4.3",
+    "@babel/preset-env": "^7.4.3",
+    "@typescript-eslint/eslint-plugin": "^1.7.0",
+    "@typescript-eslint/parser": "^1.6.0",
+    "babel-jest": "^24.7.1",
+    "eslint": "5.3.0",
+    "eslint-config-airbnb": "17.1.0",
+    "eslint-config-prettier": "^4.3.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-prettier": "^3.1.0",
+    "eslint-plugin-react": "^7.11.0",
+    "jest": "^24.7.1",
+    "prettier": "^1.17.1",
+    "typescript": "^3.4.4"
+  },
+  "dependencies": {
+    "immer": "^3.1.1"
+  },
+  "files": [
+    "src",
+    "dist"
+  ]
+}

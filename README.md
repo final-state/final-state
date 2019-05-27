@@ -70,7 +70,24 @@ Get the latest state object. Keep in mind that you shouldn't mutate the state ob
 
 ### Store#subscribe(listener)
 
-Subscribe the changes of state. Once the state are changed by `Store#dispatch`, the `listener` will be called. The `listener` is a function with no arguments, without respect to the return value. You can call `Store#getState` in `listener` to get the latest state.
+Subscribe the changes of state. Once the state are changed by `Store#dispatch`, the `listener` will be called.
+#### listener
+The `listener` is a function with the following signature:
+```typescript
+/**
+ * Listener type
+ *
+ * @template T the type of your state
+ */
+export type Listener<T> = (prevState?: T) => void;
+```
+It passes a `prevState` as function parameter to let you know the previous state. You can call `Store#getState` in `listener` to get the latest state.
+
+A basic example of using `prevState`:
+```javascript
+// final-state-logger
+store.subscribe(prevState => console.log(prevState, store.getState()));
+```
 
 ### Store#unSubscribe(listener)
 

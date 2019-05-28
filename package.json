@@ -13,7 +13,7 @@
     "lint": "eslint -c .eslintrc.js --ext ts --fix src",
     "build": "yarn lint && tsc",
     "pub": "yarn publish --no-git-tag-version",
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "sideEffects": false,
   "devDependencies": {

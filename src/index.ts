@@ -25,12 +25,12 @@ export type Action<T = any, K = undefined> = (
  *
  * @template T the type of your state
  */
-export type Listener<T = any> = (actionName?: string, prevState?: T) => void;
+export type Listener<T = any> = (type?: string, prevState?: T) => void;
 
 /**
  * Action map
  */
-interface ActionMap<T> {
+export interface ActionMap<T> {
   [type: string]: Action<T, any>;
 }
 

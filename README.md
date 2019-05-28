@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.com/final-state/final-state.svg?branch=master)](https://travis-ci.com/final-state/final-state)
 [![codecov.io](https://codecov.io/gh/final-state/final-state/branch/master/graph/badge.svg)](https://codecov.io/gh/final-state/final-state)
 [![Known Vulnerabilities](https://snyk.io/test/github/final-state/final-state/badge.svg)](https://snyk.io/test/github/final-state/final-state)
-[![minified + gzip](https://badgen.net/bundlephobia/minzip/final-state@0.2.4)](https://bundlephobia.com/result?p=final-state@0.2.4)
+[![minified + gzip](https://badgen.net/bundlephobia/minzip/final-state@0.2.5)](https://bundlephobia.com/result?p=final-state@0.2.5)
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
 # final-state
@@ -11,9 +11,10 @@
 ## Installation
 
 ```bash
+# Install peer dependencies
+yarn add immer
+# Install final-state
 yarn add final-state
-# or
-npm install final-state
 ```
 
 `final-state` is written in `Typescript`, so you don't need to find a type definition for it.
@@ -29,8 +30,15 @@ const initialState = {
   b: 'good',
 };
 
+// Define actions
+const actions = {
+  increaseA(draftState, n = 1) {
+    draftState.a += n;
+  },
+};
+
 // Create store instance
-const store = new Store(initialState);
+const store = new Store(initialState, actions, 'store-name');
 
 // Print state
 console.log('INITIAL STATE:', store.getState());
@@ -44,13 +52,8 @@ function listener() {
 // Subscribe the changes of state
 store.subscribe(listener);
 
-// Define an action to alter state
-function incrementAction(draftState) {
-  draftState.a = draftState.a + 1;
-}
-
 // Dispatch action
-store.dispatch(incrementAction);
+store.dispatch('increaseA');
 
 // Print state
 console.log('CURRENT STATE:', store.getState());
@@ -66,9 +69,33 @@ CURRENT STATE: Object {a: 2, b: "good"}
 
 ## API Reference
 
-### new Store(initialState)
+### new Store(initialState, actions[, name])
 
-Create a store instance by passing in the initial state of your app.
+Create a store instance. You can create multiple stores in your app.
+
+Parameters:
+
+- `initialState` is the initial state, it can be any type.
+- `actions` is all the actions that work for this store. It looks like this:
+  ```javascript
+  const actions = {
+    someFooAction(draftState, params) {
+      // do something
+    },
+    someBarAction: draftState => {
+      // do something
+    },
+  };
+  ```
+  The signature of action function is:
+  ```javascript
+  (draftState[, actionParams]) => {
+    // To mutate draftState directly!
+    // No need to return anything!
+    // Changes will be merged into real state object immutably.
+  }
+  ```
+- `name` is optional. It will give this store instance a name. If you don't give it a name, it's default name is \`NO*NAME_STORE*\${Date.now()}\`.
 
 ### Store#getState()
 
@@ -88,46 +115,40 @@ The `listener` is a function with the following signature:
  *
  * @template T the type of your state
  */
-export type Listener<T> = (prevState?: T) => void;
+export type Listener<T = any> = (type?: string, prevState?: T) => void;
 ```
 
-It passes a `prevState` as function parameter to let you know the previous state. You can call `Store#getState` in `listener` to get the latest state.
+- `type` lets you know which action causes this change.
+- `prevState` lets you know the previous state.
+- You can call `Store#getState` in `listener` to get the latest state.
 
-A basic example of using `prevState`:
+A basic example of using `type` and `prevState`:
 
 ```javascript
 // final-state-logger
-store.subscribe(prevState => console.log(prevState, store.getState()));
+store.subscribe((type, prevState) =>
+  console.log(type, prevState, store.getState()),
+);
 ```
 
 ### Store#unSubscribe(listener)
 
 Unsubscribe a listener. The `listener` should exactly be same with the one passed to `Store#subscribe`.
 
-### Store#dispatch(action[, actionParams])
+### Store#dispatch(type[, params])
 
-Dispatch an action to alter state. Each time `dispatch` is called, all the listeners registered by `Store#subscribe` will be called. The `action` is a special callback function with the following signature:
+Dispatch an action to alter state.
 
-```javascript
-(draftState[, actionParams]) => {
-  // To mutate draftState directly!
-  // No need to return anything!
-  // Changes will be merged into real state object immutably.
-}
-```
+The first parameter `type` is the name of the action function which will be triggered.
 
-It's inner implementation is:
+The second parameter `params` is the dynamic values that are used by action function.
 
-```javascript
-// pseudocode
-import { produce } from 'immer';
-produce(state, action);
-```
+Each time `dispatch` is called, all the listeners registered by `Store#subscribe` will be called.
 
 ## Use with `typescript`
 
 ```typescript
-import Store, { Action } from 'final-state';
+import Store, { Action, ActionMap } from 'final-state';
 
 // Define state shape
 interface State {
@@ -141,8 +162,15 @@ const initialState: State = {
   b: 'good',
 };
 
+// Define actions
+const actions: ActionMap<State> = {
+  increaseA(draftState, n = 1) {
+    draftState.a += n;
+  },
+};
+
 // Create store instance
-const store = new Store<State>(initialState);
+const store = new Store<State>(initialState, actions);
 
 // Print state
 console.log('INITIAL STATE:', store.getState());
@@ -156,13 +184,8 @@ function listener() {
 // Subscribe the changes of state
 store.subscribe(listener);
 
-// Define an action to alter state
-const incrementAction: Action<State> = draftState => {
-  draftState.a = draftState.a + 1;
-};
-
 // Dispatch action
-store.dispatch(incrementAction);
+store.dispatch('increaseA');
 
 // Print state
 console.log('CURRENT STATE:', store.getState());

@@ -10,7 +10,7 @@ readFile('./package.json', (err, buf) => {
     if (err1) {
       throw err1;
     }
-    const text = buf1.toString().replace(/\${version}/g, version);
+    const text = buf1.toString().replace(/final-state@\d+\.\d+\.\d+/g, version);
 
     writeFile('./README.md', text, err2 => {
       if (err2) {

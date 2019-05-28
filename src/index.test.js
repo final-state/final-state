@@ -8,7 +8,16 @@ function createContext() {
     b: 'good',
     c: true,
   };
-  const store = new Store(initialState);
+  const actions = {
+    increaseA(draftState, n = 1) {
+      draftState.a += n;
+    },
+    toggleC(draftState) {
+      draftState.c = !draftState.c;
+    },
+    doNothing() {},
+  };
+  const store = new Store(initialState, actions, 'test-store');
   return {
     initialState,
     store,
@@ -27,27 +36,18 @@ describe('Create store & Store#getState', () => {
 
 describe('Store#dispatch', () => {
   const { initialState, store } = createContext();
-  function incrementAction(draftState) {
-    draftState.a += 1;
-  }
-  function incrementNAction(draftState, n) {
-    draftState.a += n;
-  }
-  function toggleAction(draftState) {
-    draftState.c = !draftState.c;
-  }
   test('`incrementAction` should work', () => {
-    store.dispatch(incrementAction);
+    store.dispatch('increaseA');
     expect(store.getState().a).toBe(initialState.a + 1);
   });
   test('`toggleAction` should work', () => {
-    store.dispatch(toggleAction);
+    store.dispatch('toggleC');
     expect(store.getState().c).toBe(!initialState.c);
   });
   test('Action with parameters works', () => {
     const current = store.getState().a;
     const n = 10;
-    store.dispatch(incrementNAction, n);
+    store.dispatch('increaseA', n);
     expect(store.getState().a).toBe(current + n);
   });
 });
@@ -62,9 +62,9 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     }
     store.subscribe(listener);
     expect(listenerRunned).toBe(0);
-    store.dispatch(() => {});
+    store.dispatch('doNothing');
     expect(listenerRunned).toBe(0);
-    store.dispatch(() => {});
+    store.dispatch('doNothing');
     expect(listenerRunned).toBe(0);
   });
   test('Listener will be triggered when an action altered state', () => {
@@ -75,13 +75,9 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     }
     store.subscribe(listener);
     expect(listenerRunned).toBe(0);
-    store.dispatch(draftState => {
-      draftState.a += 1;
-    });
+    store.dispatch('increaseA');
     expect(listenerRunned).toBe(1);
-    store.dispatch(draftState => {
-      draftState.a += 1;
-    });
+    store.dispatch('increaseA');
     expect(listenerRunned).toBe(2);
   });
   test("Listener won't be triggered after unSubscribe", () => {
@@ -92,31 +88,38 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     }
     store.subscribe(listener);
     expect(listenerRunned).toBe(0);
-    store.dispatch(draftState => {
-      draftState.a += 1;
-    });
+    store.dispatch('increaseA');
     expect(listenerRunned).toBe(1);
     store.unSubscribe(listener);
-    store.dispatch(draftState => {
-      draftState.a += 1;
-    });
+    store.dispatch('increaseA');
     expect(listenerRunned).toBe(1);
   });
   test('Listener can access the previous state', () => {
     const { store } = createContext();
+    let t = null;
     let prev = null;
-    function listener(prevState) {
+    function listener(type, prevState) {
+      t = type;
       prev = prevState;
     }
     store.subscribe(listener);
-    function action(draftState) {
-      draftState.a += 1;
-    }
-    store.dispatch(action);
+    store.dispatch('increaseA');
+    expect(t).toBe('increaseA');
     expect(prev.a).toBe(1);
     expect(store.getState().a).toBe(2);
-    store.dispatch(action);
-    expect(prev.a).toBe(2);
-    expect(store.getState().a).toBe(3);
+    store.dispatch('toggleC');
+    expect(t).toBe('toggleC');
+    expect(prev.c).toBe(true);
+    expect(store.getState().c).toBe(false);
+  });
+  test('Error message will be displayed when dispatch a nonexistent action type', () => {
+    const spyError = jest.spyOn(console, 'error');
+    const { store } = createContext();
+    expect(spyError).not.toHaveBeenCalled();
+    store.dispatch('nonexistent');
+    expect(spyError).toHaveBeenCalledTimes(1);
+    expect(spyError).toHaveBeenCalledWith(
+      `The action 'nonexistent' is not exist.`,
+    );
   });
 });

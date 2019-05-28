@@ -25,7 +25,14 @@ export type Action<T = any, K = undefined> = (
  *
  * @template T the type of your state
  */
-export type Listener<T = any> = (prevState?: T) => void;
+export type Listener<T = any> = (actionName?: string, prevState?: T) => void;
+
+/**
+ * Action map
+ */
+interface ActionMap<T> {
+  [type: string]: Action<T, any>;
+}
 
 /**
  * class Store
@@ -44,6 +51,16 @@ export default class Store<T = any> {
   private state: T;
 
   /**
+   * actions
+   */
+  private actions: ActionMap<T>;
+
+  /**
+   * store's name
+   */
+  public name: string;
+
+  /**
    * all subscription listeners
    */
   private listeners: Listener<T>[] = [];
@@ -53,8 +70,14 @@ export default class Store<T = any> {
    * @param {T} initialState the initial state object
    * @template T the type of your state
    */
-  public constructor(initialState: T) {
+  public constructor(
+    initialState: T,
+    actions: ActionMap<T>,
+    name: string = `NO_NAME_STORE_${Date.now()}`,
+  ) {
     this.state = initialState;
+    this.actions = actions;
+    this.name = `Store[${name}]`;
   }
 
   /**
@@ -67,20 +90,25 @@ export default class Store<T = any> {
   /**
    * @public dispatch an `Action` to modify state
    * @param {Action<T>} action the action to modify state
-   * @template T the type of your state
-   * @template K the type of your action parameters
+   * @template T the type of your action parameters
    *
    * All listeners will be triggered after this method is called.
    */
-  public dispatch<K = undefined>(action: Action<T, K>, actionParams?: K) {
-    const nextState = produce(this.state, (draftState: Draft<T>) =>
-      action(draftState, actionParams),
+  public dispatch<T = undefined>(type: string, params?: T) {
+    const action = this.actions[type];
+    if (action === undefined) {
+      // eslint-disable-next-line no-console
+      console.error(`The action '${type}' is not exist.`);
+      return;
+    }
+    const nextState = produce(this.state, draftState =>
+      action(draftState, params),
     );
     // only update state and trigger listeners when state **really** changed
     if (this.state !== nextState) {
       const prevState = this.state;
       this.state = nextState;
-      this.listeners.forEach(listener => listener(prevState));
+      this.listeners.forEach(listener => listener(type, prevState));
     }
   }
 

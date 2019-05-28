@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["esnext"],
+    "lib": ["esnext", "dom"],
     "declaration": true,
     "skipLibCheck": true,
     "esModuleInterop": true,

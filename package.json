@@ -13,7 +13,8 @@
     "lint": "eslint -c .eslintrc.js --ext ts --fix src",
     "build": "yarn lint && tsc",
     "pub": "yarn publish --no-git-tag-version",
-    "test": "jest --coverage"
+    "test": "jest --coverage",
+    "update-readme": "node update-readme.js"
   },
   "sideEffects": false,
   "devDependencies": {
@@ -29,12 +30,18 @@
     "eslint-plugin-jsx-a11y": "^6.1.1",
     "eslint-plugin-prettier": "^3.1.0",
     "eslint-plugin-react": "^7.11.0",
+    "husky": "^2.3.0",
     "jest": "^24.7.1",
     "prettier": "^1.17.1",
     "typescript": "^3.4.4"
   },
   "dependencies": {
     "immer": "^3.1.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn update-readme"
+    }
   },
   "files": [
     "src",

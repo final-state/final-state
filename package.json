@@ -14,7 +14,7 @@
     "build": "yarn lint && tsc",
     "pub": "yarn publish --no-git-tag-version",
     "test": "jest --coverage",
-    "update-readme": "node update-readme.js"
+    "update-readme": "node scripts/update-readme.js"
   },
   "sideEffects": false,
   "devDependencies": {

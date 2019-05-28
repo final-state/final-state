@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-explicit-any:0 */
 import { produce, Draft } from 'immer';
 
 /**
@@ -14,7 +15,7 @@ import { produce, Draft } from 'immer';
  * @template T the type of your state
  * @template K the type of your action parameters
  */
-export type Action<T, K = undefined> = (
+export type Action<T = any, K = undefined> = (
   draftState: Draft<T>,
   actionParams?: K,
 ) => void;
@@ -24,7 +25,7 @@ export type Action<T, K = undefined> = (
  *
  * @template T the type of your state
  */
-export type Listener<T> = (prevState?: T) => void;
+export type Listener<T = any> = (prevState?: T) => void;
 
 /**
  * class Store
@@ -35,7 +36,7 @@ export type Listener<T> = (prevState?: T) => void;
  *
  * @template T the type of your state
  */
-export default class Store<T> {
+export default class Store<T = any> {
   /**
    * state object
    * @template T the type of your state

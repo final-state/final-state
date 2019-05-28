@@ -1,0 +1,2 @@
+- Add tests for new features
+- Run `yarn test` before raising a PR

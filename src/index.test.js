@@ -2,6 +2,10 @@
 
 import Store from '../dist';
 
+function sleep(time) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+
 function createContext() {
   const initialState = {
     a: 1,
@@ -14,6 +18,10 @@ function createContext() {
     },
     toggleC(draftState) {
       draftState.c = !draftState.c;
+    },
+    async asyncIncreaseA(draftState, n = 1) {
+      await sleep(500);
+      draftState.a += n;
     },
     doNothing() {},
   };
@@ -32,13 +40,24 @@ describe('Create store & Store#getState', () => {
   test("New store's state should have a same shape with the initial state", () => {
     expect(JSON.stringify(store.getState())).toBe(JSON.stringify(initialState));
   });
+  test("Store instance's name should be same with the one passed in", () => {
+    const name = 'name';
+    const s = new Store({}, {}, name);
+    expect(s.name).toBe(`Store[${name}]`);
+  });
+  test("Store instance's name should be correct when no name passed in", () => {
+    const s = new Store({}, {});
+    expect(s.name).toMatch(/^Store\[NO_NAME_STORE_\d+]$/);
+  });
 });
 
 describe('Store#dispatch', () => {
   const { initialState, store } = createContext();
   test('`incrementAction` should work', () => {
     store.dispatch('increaseA');
-    expect(store.getState().a).toBe(initialState.a + 1);
+    expect(Promise.resolve(store.getState().a)).resolves.toBe(
+      initialState.a + 1,
+    );
   });
   test('`toggleAction` should work', () => {
     store.dispatch('toggleC');
@@ -48,6 +67,22 @@ describe('Store#dispatch', () => {
     const current = store.getState().a;
     const n = 10;
     store.dispatch('increaseA', n);
+    expect(store.getState().a).toBe(current + n);
+  });
+  test('Error message will be displayed when dispatch a nonexistent action type', () => {
+    const spyError = jest.spyOn(console, 'error');
+    expect(spyError).not.toHaveBeenCalled();
+    store.dispatch('nonexistent');
+    expect(spyError).toHaveBeenCalledTimes(1);
+    expect(spyError).toHaveBeenCalledWith(
+      `The action 'nonexistent' is not exist.`,
+    );
+  });
+  test('Async action works', async () => {
+    const current = store.getState().a;
+    const n = 10;
+    store.dispatch('asyncIncreaseA', n);
+    await sleep(600);
     expect(store.getState().a).toBe(current + n);
   });
 });
@@ -90,9 +125,12 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     expect(listenerRunned).toBe(0);
     store.dispatch('increaseA');
     expect(listenerRunned).toBe(1);
+    store.unSubscribe(() => {});
+    store.dispatch('increaseA');
+    expect(listenerRunned).toBe(2);
     store.unSubscribe(listener);
     store.dispatch('increaseA');
-    expect(listenerRunned).toBe(1);
+    expect(listenerRunned).toBe(2);
   });
   test('Listener can access the previous state', () => {
     const { store } = createContext();
@@ -111,15 +149,5 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     expect(t).toBe('toggleC');
     expect(prev.c).toBe(true);
     expect(store.getState().c).toBe(false);
-  });
-  test('Error message will be displayed when dispatch a nonexistent action type', () => {
-    const spyError = jest.spyOn(console, 'error');
-    const { store } = createContext();
-    expect(spyError).not.toHaveBeenCalled();
-    store.dispatch('nonexistent');
-    expect(spyError).toHaveBeenCalledTimes(1);
-    expect(spyError).toHaveBeenCalledWith(
-      `The action 'nonexistent' is not exist.`,
-    );
   });
 });

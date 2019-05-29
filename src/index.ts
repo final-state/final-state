@@ -14,11 +14,13 @@ import { produce, Draft } from 'immer';
  *
  * @template T the type of your state
  * @template K the type of your action parameters
+ *
+ * @returns void | Promise
  */
 export type Action<T = any, K = undefined> = (
   draftState: Draft<T>,
   actionParams?: K,
-) => void;
+) => void | Promise<undefined>;
 
 /**
  * Listener type
@@ -88,6 +90,7 @@ export default class Store<T = any> {
   }
 
   /**
+   * @public dispatch an `Action` to modify state  /**
    * @public dispatch an `Action` to modify state
    * @param {Action<T>} action the action to modify state
    * @template T the type of your action parameters
@@ -104,6 +107,16 @@ export default class Store<T = any> {
     const nextState = produce(this.state, draftState =>
       action(draftState, params),
     );
+    if (nextState instanceof Promise) {
+      nextState.then(state => {
+        this.triggerListeners(type, state);
+      });
+    } else {
+      this.triggerListeners(type, nextState);
+    }
+  }
+
+  private triggerListeners(type: string, nextState: T) {
     // only update state and trigger listeners when state **really** changed
     if (this.state !== nextState) {
       const prevState = this.state;

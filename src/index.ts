@@ -108,9 +108,7 @@ export default class Store<T = any> {
       action(draftState, params),
     );
     if (nextState instanceof Promise) {
-      nextState.then(state => {
-        this.triggerListeners(type, state);
-      });
+      nextState.then(state => this.triggerListeners(type, state));
     } else {
       this.triggerListeners(type, nextState);
     }

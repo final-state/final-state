@@ -85,6 +85,9 @@ Parameters:
     someBarAction: draftState => {
       // do something
     },
+    async someAsyncAction(draftState) {
+      // do some async works
+    },
   };
   ```
   The signature of action function is:
@@ -144,6 +147,21 @@ The first parameter `type` is the name of the action function which will be trig
 The second parameter `params` is the dynamic values that are used by action function.
 
 Each time `dispatch` is called, all the listeners registered by `Store#subscribe` will be called.
+
+**⚡️️️️️️️Important Notes!!!**
+
+When you dispatch an async action like this:
+
+```javascript
+const actions = {
+  async someAsyncAction(draftState) {...},
+};
+// ...
+store.dispatch('someAsyncAction');
+// store.getState() is still old state
+```
+
+You can't get the latest state right after dispatching. Because as it's name says, it is asynchronous.
 
 ## Use with `typescript`
 

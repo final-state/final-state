@@ -6,24 +6,25 @@ function sleep(time) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
 
+const actions = {
+  increaseA(draftState, n = 1) {
+    draftState.a += n;
+  },
+  toggleC(draftState) {
+    draftState.c = !draftState.c;
+  },
+  async asyncIncreaseA(draftState, n = 1) {
+    await sleep(500);
+    draftState.a += n;
+  },
+  doNothing() {},
+};
+
 function createContext() {
   const initialState = {
     a: 1,
     b: 'good',
     c: true,
-  };
-  const actions = {
-    increaseA(draftState, n = 1) {
-      draftState.a += n;
-    },
-    toggleC(draftState) {
-      draftState.c = !draftState.c;
-    },
-    async asyncIncreaseA(draftState, n = 1) {
-      await sleep(500);
-      draftState.a += n;
-    },
-    doNothing() {},
   };
   const store = new Store(initialState, actions, 'test-store');
   return {
@@ -55,9 +56,7 @@ describe('Store#dispatch', () => {
   const { initialState, store } = createContext();
   test('`incrementAction` should work', () => {
     store.dispatch('increaseA');
-    expect(Promise.resolve(store.getState().a)).resolves.toBe(
-      initialState.a + 1,
-    );
+    expect(store.getState().a).toBe(initialState.a + 1);
   });
   test('`toggleAction` should work', () => {
     store.dispatch('toggleC');
@@ -77,11 +76,37 @@ describe('Store#dispatch', () => {
     expect(spyError).toHaveBeenCalledWith(
       `The action 'nonexistent' is not exist.`,
     );
+    spyError.mockClear();
   });
   test('Async action works', async () => {
     const current = store.getState().a;
     const n = 10;
     store.dispatch('asyncIncreaseA', n);
+    await sleep(600);
+    expect(store.getState().a).toBe(current + n);
+  });
+});
+
+describe('Store#dispatchAction', () => {
+  const { initialState, store } = createContext();
+  test('`incrementAction` should work', () => {
+    store.dispatchAction(actions.increaseA);
+    expect(store.getState().a).toBe(initialState.a + 1);
+  });
+  test('`toggleAction` should work', () => {
+    store.dispatchAction(actions.toggleC);
+    expect(store.getState().c).toBe(!initialState.c);
+  });
+  test('Action with parameters works', () => {
+    const current = store.getState().a;
+    const n = 10;
+    store.dispatchAction(actions.increaseA, n);
+    expect(store.getState().a).toBe(current + n);
+  });
+  test('Async action works', async () => {
+    const current = store.getState().a;
+    const n = 10;
+    store.dispatchAction(actions.asyncIncreaseA, n);
     await sleep(600);
     expect(store.getState().a).toBe(current + n);
   });

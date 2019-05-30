@@ -90,14 +90,11 @@ export default class Store<T = any> {
   }
 
   /**
-   * @public dispatch an `Action` to modify state  /**
    * @public dispatch an `Action` to modify state
-   * @param {Action<T>} action the action to modify state
-   * @template T the type of your action parameters
-   *
-   * All listeners will be triggered after this method is called.
+   * @param {string} type the action's name
+   * @param {any} params the parameters passed to action
    */
-  public dispatch<T = undefined>(type: string, params?: T) {
+  public dispatch(type: string, params?: any) {
     const action = this.actions[type];
     if (action === undefined) {
       // eslint-disable-next-line no-console
@@ -111,6 +108,23 @@ export default class Store<T = any> {
       nextState.then(state => this.triggerListeners(type, state));
     } else {
       this.triggerListeners(type, nextState);
+    }
+  }
+
+  /**
+   * @public dispatch an `Action` to modify state
+   * @param {Action<T, K>} action the action to modify state
+   * @param {K} params the parameters passed to action
+   * @template K the type of your action parameters
+   */
+  public dispatchAction<K = undefined>(action: Action<T, K>, params?: K) {
+    const nextState = produce(this.state, draftState =>
+      action(draftState, params),
+    );
+    if (nextState instanceof Promise) {
+      nextState.then(state => this.triggerListeners('NO_TYPE', state));
+    } else {
+      this.triggerListeners('NO_TYPE', nextState);
     }
   }
 

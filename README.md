@@ -146,7 +146,7 @@ The first parameter `type` is the name of the action function which will be trig
 
 The second parameter `params` is the dynamic values that are used by action function.
 
-Each time `dispatch` is called, all the listeners registered by `Store#subscribe` will be called.
+After the action is finished, all the listeners registered by `Store#subscribe` will be called.
 
 **⚡️️️️️️️Important Notes!!!**
 
@@ -162,6 +162,18 @@ store.dispatch('someAsyncAction');
 ```
 
 You can't get the latest state right after dispatching. Because as it's name says, it is asynchronous.
+
+### Store#dispatchAction(action[, params])
+
+Dispatch an action to alter state.
+
+The first parameter `action` is the action function which will be triggered.
+
+The second parameter `params` is the dynamic values that are used by action function.
+
+After the action is finished, all the listeners registered by `Store#subscribe` will be called.
+
+Async action is also supported like `Store#dispatch`.
 
 ## Use with `typescript`
 

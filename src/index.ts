@@ -50,7 +50,7 @@ export type Listener<T = any> = (type?: string, prevState?: T) => void;
  * Action map
  */
 export interface ActionMap {
-  [type: string]: Action | PluginAction;
+  [type: string]: Action<any, any> | PluginAction;
 }
 
 /**
@@ -78,7 +78,7 @@ export default class Store<T = any> {
    * plugin handlers to handle action
    */
   private actionHandlers: {
-    [name: string]: ActionHandler;
+    [name: string]: ActionHandler<any>;
   } = {};
 
   /**
@@ -119,7 +119,10 @@ export default class Store<T = any> {
    * @param {ActionHandler<K>} handler the function to handle action
    * @template K the type of your action parameters
    */
-  public registerActionHandler<K>(name: string, handler: ActionHandler<K>) {
+  public registerActionHandler<K = undefined>(
+    name: string,
+    handler: ActionHandler<K>,
+  ) {
     this.actionHandlers[name] = handler;
   }
 

@@ -33,6 +33,7 @@
     "immer": "^3.1.2",
     "jest": "^24.7.1",
     "prettier": "^1.17.1",
+    "rxjs": "^6.5.2",
     "typescript": "^3.4.4"
   },
   "peerDependencies": {

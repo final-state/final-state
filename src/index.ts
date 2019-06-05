@@ -2,16 +2,22 @@
 import { produce, Draft } from 'immer';
 
 /**
- * Action type
+ * Type of action for plugins
+ * @param {string} handler the name of plugin handler
+ * @param {T} action the action that plugins can parse
+ * @template T the type of the action that plugins can parse
+ */
+export interface PluginAction<T = any> {
+  handler: string;
+  action: T;
+}
+
+/**
+ * Type of default action
  *
- * `draftState` is a `Draft` of your state
- *
- * `Draft` is a `immer` object
- *
- * You can modify `draftState` as you like in this function
- *
- * `immer` will merge draft to state immutably
- *
+ * You should directly mutate `draftState`, and `immer` will merge draft to state immutably.
+ * @param {Draft<T>} draftState a `Draft` of your state, `Draft` is a `immer` object.
+ * @param {K} params the parameters of action
  * @template T the type of your state
  * @template K the type of your action parameters
  *
@@ -19,8 +25,19 @@ import { produce, Draft } from 'immer';
  */
 export type Action<T = any, K = undefined> = (
   draftState: Draft<T>,
-  actionParams?: K,
+  params?: K,
 ) => void | Promise<undefined>;
+
+/**
+ * Type of plugin handler to handle actions
+ * @param {PluginAction} pluginAction the action object of plugins
+ * @param {K} params the parameters of action
+ * @template K the type of your action parameters
+ */
+export type ActionHandler<K = undefined> = (
+  pluginAction: PluginAction,
+  params?: K,
+) => void;
 
 /**
  * Listener type
@@ -32,8 +49,8 @@ export type Listener<T = any> = (type?: string, prevState?: T) => void;
 /**
  * Action map
  */
-export interface ActionMap<T> {
-  [type: string]: Action<T, any>;
+export interface ActionMap {
+  [type: string]: Action | PluginAction;
 }
 
 /**
@@ -55,7 +72,14 @@ export default class Store<T = any> {
   /**
    * actions
    */
-  private actions: ActionMap<T>;
+  private actions: ActionMap;
+
+  /**
+   * plugin handlers to handle action
+   */
+  private actionHandlers: {
+    [name: string]: ActionHandler;
+  } = {};
 
   /**
    * store's name
@@ -74,7 +98,7 @@ export default class Store<T = any> {
    */
   public constructor(
     initialState: T,
-    actions: ActionMap<T>,
+    actions: ActionMap,
     name: string = `NO_NAME_STORE_${Date.now()}`,
   ) {
     this.state = initialState;
@@ -90,44 +114,85 @@ export default class Store<T = any> {
   }
 
   /**
-   * @public dispatch an `Action` to modify state
-   * @param {string} type the action's name
-   * @param {any} params the parameters passed to action
+   * Register a plugin handler to handle action
+   * @param {string} name the plugin handler's name
+   * @param {ActionHandler<K>} handler the function to handle action
+   * @template K the type of your action parameters
    */
-  public dispatch(type: string, params?: any) {
-    const action = this.actions[type];
-    if (action === undefined) {
-      // eslint-disable-next-line no-console
-      console.error(`The action '${type}' is not exist.`);
-      return;
-    }
-    const nextState = produce(this.state, draftState =>
-      action(draftState, params),
-    );
-    if (nextState instanceof Promise) {
-      nextState.then(state => this.triggerListeners(type, state));
+  public registerActionHandler<K>(name: string, handler: ActionHandler<K>) {
+    this.actionHandlers[name] = handler;
+  }
+
+  /**
+   * An overload of dispatch
+   *
+   * Dispatch an action that has been defined and named.
+   * @param {string} action the name of action
+   * @param {K} params the type of your action parameters
+   * @template K the type of your action parameters
+   */
+  public dispatch<K = undefined>(action: string, params?: K): void;
+
+  /**
+   * An overload of dispatch
+   *
+   * Dispatch an action that is defined temporarily
+   * @param {Action<T, K>} action the action function
+   * @param {K} params the type of your action parameters
+   * @template K the type of your action parameters
+   */
+  public dispatch<K = undefined>(action: Action<T, K>, params?: K): void;
+
+  /**
+   * Implementation for overloads
+   */
+  public dispatch<K = undefined>(action: string | Action<T, K>, params?: K) {
+    if (typeof action === 'string') {
+      const theAction = this.actions[action];
+      if (theAction === undefined) {
+        // eslint-disable-next-line no-console
+        console.error(`The action '${action}' is not exist.`);
+        return;
+      }
+      const anyAction = theAction as any;
+      if (typeof anyAction.handler === 'string') {
+        const pluginAction = theAction as PluginAction;
+        const handler = this.actionHandlers[
+          pluginAction.handler
+        ] as ActionHandler<K>;
+        // this is a runtime check
+        if (handler !== undefined) {
+          handler(pluginAction, params);
+        }
+      } else {
+        const normalAction = theAction as Action<T, K>;
+        const nextState = produce(this.state, draftState =>
+          normalAction(draftState, params),
+        );
+        if (nextState instanceof Promise) {
+          nextState.then(state => this.triggerListeners(action, state));
+        } else {
+          this.triggerListeners(action, nextState);
+        }
+      }
     } else {
-      this.triggerListeners(type, nextState);
+      const nextState = produce(this.state, draftState =>
+        action(draftState, params),
+      );
+      if (nextState instanceof Promise) {
+        nextState.then(state => this.triggerListeners('NO_TYPE', state));
+      } else {
+        this.triggerListeners('NO_TYPE', nextState);
+      }
     }
   }
 
   /**
-   * @public dispatch an `Action` to modify state
-   * @param {Action<T, K>} action the action to modify state
-   * @param {K} params the parameters passed to action
-   * @template K the type of your action parameters
+   * Trigger all listeners
+   * @param {string} type the type of the action which causes the changing of state
+   * @param {T} nextState the next state
+   * @template T the type of your state
    */
-  public dispatchAction<K = undefined>(action: Action<T, K>, params?: K) {
-    const nextState = produce(this.state, draftState =>
-      action(draftState, params),
-    );
-    if (nextState instanceof Promise) {
-      nextState.then(state => this.triggerListeners('NO_TYPE', state));
-    } else {
-      this.triggerListeners('NO_TYPE', nextState);
-    }
-  }
-
   private triggerListeners(type: string, nextState: T) {
     // only update state and trigger listeners when state **really** changed
     if (this.state !== nextState) {

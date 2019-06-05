@@ -13,6 +13,7 @@ module.exports = {
     indent: 'off',
     '@typescript-eslint/indent': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
+    'no-dupe-class-members': 'off',
   },
   settings: {
     'import/resolver': {

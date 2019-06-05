@@ -1,10 +1,16 @@
 /* eslint-disable no-console,no-param-reassign */
-
+import { Observable } from 'rxjs';
 import Store from '../dist';
 
 function sleep(time) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
+
+const initialState = {
+  a: 1,
+  b: 'good',
+  c: true,
+};
 
 const actions = {
   increaseA(draftState, n = 1) {
@@ -18,23 +24,31 @@ const actions = {
     draftState.a += n;
   },
   doNothing() {},
+  rxIncreaseA: {
+    handler: 'rx',
+    action(n = 1) {
+      return new Observable(subscriber => {
+        subscriber.next(['increaseA', n]);
+        setTimeout(() => {
+          subscriber.next('increaseA');
+        }, 200);
+      });
+    },
+  },
+  pluginNonexistent: {
+    handler: 'nonexistent',
+    action() {
+      console.log('plugin not exists.');
+    },
+  },
 };
 
-function createContext() {
-  const initialState = {
-    a: 1,
-    b: 'good',
-    c: true,
-  };
-  const store = new Store(initialState, actions, 'test-store');
-  return {
-    initialState,
-    store,
-  };
+function createStore() {
+  return new Store(initialState, actions, 'test-store');
 }
 
 describe('Create store & Store#getState', () => {
-  const { initialState, store } = createContext();
+  const store = createStore();
   test("New store's state should have a same ref with the initial state", () => {
     expect(store.getState()).toBe(initialState);
   });
@@ -52,8 +66,8 @@ describe('Create store & Store#getState', () => {
   });
 });
 
-describe('Store#dispatch', () => {
-  const { initialState, store } = createContext();
+describe('Store#dispatch overload 1', () => {
+  const store = createStore();
   test('`incrementAction` should work', () => {
     store.dispatch('increaseA');
     expect(store.getState().a).toBe(initialState.a + 1);
@@ -87,26 +101,62 @@ describe('Store#dispatch', () => {
   });
 });
 
-describe('Store#dispatchAction', () => {
-  const { initialState, store } = createContext();
+describe('Store#dispatch overload 1, plugin action', () => {
+  const store = createStore();
+  store.registerActionHandler('rx', (pluginAction, params) => {
+    pluginAction.action(params).subscribe({
+      next(value) {
+        if (Array.isArray(value)) {
+          store.dispatch(...value);
+        } else if (typeof value === 'string') {
+          store.dispatch(value);
+        }
+      },
+      error(e) {
+        throw e;
+      },
+      complete() {
+        console.log('action complete');
+      },
+    });
+  });
+  test('`rxIncreaseA` should work', async () => {
+    store.dispatch('rxIncreaseA');
+    expect(store.getState().a).toBe(initialState.a + 1);
+    await sleep(300);
+    expect(store.getState().a).toBe(initialState.a + 2);
+    store.dispatch('rxIncreaseA', 5);
+    expect(store.getState().a).toBe(initialState.a + 7);
+    await sleep(300);
+    expect(store.getState().a).toBe(initialState.a + 8);
+  });
+  test('handler plugin not exists will not mutate state', () => {
+    const state = store.getState();
+    store.dispatch('pluginNonexistent');
+    expect(store.getState()).toBe(state);
+  });
+});
+
+describe('Store#dispatch overload 2', () => {
+  const store = createStore();
   test('`incrementAction` should work', () => {
-    store.dispatchAction(actions.increaseA);
+    store.dispatch(actions.increaseA);
     expect(store.getState().a).toBe(initialState.a + 1);
   });
   test('`toggleAction` should work', () => {
-    store.dispatchAction(actions.toggleC);
+    store.dispatch(actions.toggleC);
     expect(store.getState().c).toBe(!initialState.c);
   });
   test('Action with parameters works', () => {
     const current = store.getState().a;
     const n = 10;
-    store.dispatchAction(actions.increaseA, n);
+    store.dispatch(actions.increaseA, n);
     expect(store.getState().a).toBe(current + n);
   });
   test('Async action works', async () => {
     const current = store.getState().a;
     const n = 10;
-    store.dispatchAction(actions.asyncIncreaseA, n);
+    store.dispatch(actions.asyncIncreaseA, n);
     await sleep(600);
     expect(store.getState().a).toBe(current + n);
   });
@@ -114,7 +164,7 @@ describe('Store#dispatchAction', () => {
 
 describe('Store#subscribe & Store#unSubscribe', () => {
   test("Listener won't be triggered when an action hasn't alter state", () => {
-    const { store } = createContext();
+    const store = createStore();
 
     let listenerRunned = 0;
     function listener() {
@@ -128,7 +178,7 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     expect(listenerRunned).toBe(0);
   });
   test('Listener will be triggered when an action altered state', () => {
-    const { store } = createContext();
+    const store = createStore();
     let listenerRunned = 0;
     function listener() {
       listenerRunned += 1;
@@ -141,7 +191,7 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     expect(listenerRunned).toBe(2);
   });
   test("Listener won't be triggered after unSubscribe", () => {
-    const { store } = createContext();
+    const store = createStore();
     let listenerRunned = 0;
     function listener() {
       listenerRunned += 1;
@@ -158,7 +208,7 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     expect(listenerRunned).toBe(2);
   });
   test('Listener can access the previous state', () => {
-    const { store } = createContext();
+    const store = createStore();
     let t = null;
     let prev = null;
     function listener(type, prevState) {

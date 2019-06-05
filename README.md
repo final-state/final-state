@@ -138,11 +138,24 @@ store.subscribe((type, prevState) =>
 
 Unsubscribe a listener. The `listener` should exactly be same with the one passed to `Store#subscribe`.
 
-### Store#dispatch(type[, params])
+### Store#dispatch(action[, params]) **_[overload]_**
+
+```typescript
+// definition
+/**
+ * An overload of dispatch
+ *
+ * Dispatch an action that has been defined and named.
+ * @param {string} action the name of action
+ * @param {K} params the type of your action parameters
+ * @template K the type of your action parameters
+ */
+public dispatch<K = undefined>(action: string, params?: K): void;
+```
 
 Dispatch an action to alter state.
 
-The first parameter `type` is the name of the action function which will be triggered.
+The first parameter `action` is the name of the action function which will be triggered.
 
 The second parameter `params` is the dynamic values that are used by action function.
 
@@ -163,7 +176,20 @@ store.dispatch('someAsyncAction');
 
 You can't get the latest state right after dispatching. Because as it's name says, it is asynchronous.
 
-### Store#dispatchAction(action[, params])
+### Store#dispatch(action[, params]) **_[overload]_**
+
+```typescript
+// definition
+/**
+ * An overload of dispatch
+ *
+ * Dispatch an action that is defined temporarily
+ * @param {Action<T, K>} action the action function
+ * @param {K} params the type of your action parameters
+ * @template K the type of your action parameters
+ */
+public dispatch<K = undefined>(action: Action<T, K>, params?: K): void;
+```
 
 Dispatch an action to alter state.
 
@@ -174,6 +200,81 @@ The second parameter `params` is the dynamic values that are used by action func
 After the action is finished, all the listeners registered by `Store#subscribe` will be called.
 
 Async action is also supported like `Store#dispatch`.
+
+### Store#registerActionHandler(name, handler)
+
+Anyone can write his own action handler to handle the custom actions.
+
+The first parameter `name` is the name of your handler.
+
+The second parameter `handler` is a function with the following signature:
+
+```typescript
+/**
+ * Type of plugin handler to handle actions
+ * @param {PluginAction} pluginAction the action object of plugins
+ * @param {K} params the parameters of action
+ * @template K the type of your action parameters
+ */
+type ActionHandler<K = undefined> = (
+  pluginAction: PluginAction,
+  params?: K,
+) => void;
+```
+
+Let's see a simple example:
+
+```javascript
+// Register a custom handler that can handle observable actions
+import { Observable } from 'rxjs';
+import Store from 'final-state';
+
+const initialState = {
+  a: 0,
+};
+
+const actions = {
+  increaseA(draftState, n = 1) {
+    draftState.a += n;
+  },
+  rxIncreaseA: {
+    handler: 'rx',
+    action(n) {
+      return new Observable(subscriber => {
+        subscriber.next(['increaseA', n]);
+        setTimeout(() => {
+          subscriber.next('increaseA');
+        }, 1000);
+      });
+    },
+  },
+};
+
+const store = new Store(initialState, actions, 'custom-handler-example-store');
+
+store.registerActionHandler('rx', (pluginAction, params) => {
+  pluginAction.action(params).subscribe({
+    next(value) {
+      if (Array.isArray(value)) {
+        store.dispatch(...value);
+      } else if (typeof value === 'string') {
+        store.dispatch(value);
+      }
+    },
+    error(e) {
+      throw e;
+    },
+    complete() {
+      console.log('action complete');
+    },
+  });
+});
+
+store.dispatch('rxIncreaseA', 5);
+
+// a = 5 now
+// after 1000 milliseconds, a = 6
+```
 
 ## Use with `typescript`
 

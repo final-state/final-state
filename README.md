@@ -149,8 +149,9 @@ Unsubscribe a listener. The `listener` should exactly be same with the one passe
  * @param {string} action the name of action
  * @param {K} params the type of your action parameters
  * @template K the type of your action parameters
+ * @returns a promise to indicate the action is totally finished
  */
-public dispatch<K = undefined>(action: string, params?: K): void;
+public dispatch<K = undefined>(action: string, params?: K): Promise<void>;
 ```
 
 Dispatch an action to alter state.
@@ -159,7 +160,13 @@ The first parameter `action` is the name of the action function which will be tr
 
 The second parameter `params` is the dynamic values that are used by action function.
 
-After the action is finished, all the listeners registered by `Store#subscribe` will be called.
+It returns a `Promise` to indicate whether the action is totally finished.
+
+```javascript
+store.dispatch(...).then(() => {
+  // action is totally finished
+});
+```
 
 **⚡️️️️️️️Important Notes!!!**
 
@@ -172,6 +179,10 @@ const actions = {
 // ...
 store.dispatch('someAsyncAction');
 // store.getState() is still old state
+
+store.dispatch('someAsyncAction').then(() => {
+  // store.getState() is the latest state
+});
 ```
 
 You can't get the latest state right after dispatching. Because as it's name says, it is asynchronous.
@@ -187,8 +198,12 @@ You can't get the latest state right after dispatching. Because as it's name say
  * @param {Action<T, K>} action the action function
  * @param {K} params the type of your action parameters
  * @template K the type of your action parameters
+ * @returns a promise to indicate the action is totally finished
  */
-public dispatch<K = undefined>(action: Action<T, K>, params?: K): void;
+public dispatch<K = undefined>(
+  action: Action<T, K>,
+  params?: K,
+): Promise<void>;
 ```
 
 Dispatch an action to alter state.
@@ -197,9 +212,9 @@ The first parameter `action` is the action function which will be triggered.
 
 The second parameter `params` is the dynamic values that are used by action function.
 
-After the action is finished, all the listeners registered by `Store#subscribe` will be called.
+It returns a `Promise` to indicate whether the action is totally finished.
 
-Async action is also supported like `Store#dispatch`.
+Async action function is also supported.
 
 ### Store#registerActionHandler(name, handler)
 
@@ -213,13 +228,9 @@ The second parameter `handler` is a function with the following signature:
 /**
  * Type of plugin handler to handle actions
  * @param {PluginAction} pluginAction the action object of plugins
- * @param {K} params the parameters of action
- * @template K the type of your action parameters
+ * @param {any} params the parameters of action
  */
-type ActionHandler<K = undefined> = (
-  pluginAction: PluginAction,
-  params?: K,
-) => void;
+export type ActionHandler = (pluginAction: PluginAction, params?: any) => void;
 ```
 
 Let's see a simple example:
@@ -239,12 +250,13 @@ const actions = {
   },
   rxIncreaseA: {
     handler: 'rx',
-    action(n) {
+    action(n = 1) {
       return new Observable(subscriber => {
         subscriber.next(['increaseA', n]);
         setTimeout(() => {
           subscriber.next('increaseA');
-        }, 1000);
+          subscriber.complete();
+        }, 200);
       });
     },
   },
@@ -253,20 +265,20 @@ const actions = {
 const store = new Store(initialState, actions, 'custom-handler-example-store');
 
 store.registerActionHandler('rx', (pluginAction, params) => {
-  pluginAction.action(params).subscribe({
-    next(value) {
-      if (Array.isArray(value)) {
-        store.dispatch(...value);
-      } else if (typeof value === 'string') {
-        store.dispatch(value);
-      }
-    },
-    error(e) {
-      throw e;
-    },
-    complete() {
-      console.log('action complete');
-    },
+  return new Promise((resolve, reject) => {
+    pluginAction.action(params).subscribe({
+      next(value) {
+        if (Array.isArray(value)) {
+          store.dispatch(...value);
+        } else if (typeof value === 'string') {
+          store.dispatch(value);
+        }
+      },
+      error: reject,
+      complete() {
+        resolve();
+      },
+    });
   });
 });
 

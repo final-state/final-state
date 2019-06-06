@@ -20,7 +20,7 @@ const actions = {
     draftState.c = !draftState.c;
   },
   async asyncIncreaseA(draftState, n = 1) {
-    await sleep(500);
+    await sleep(200);
     draftState.a += n;
   },
   doNothing() {},
@@ -31,6 +31,7 @@ const actions = {
         subscriber.next(['increaseA', n]);
         setTimeout(() => {
           subscriber.next('increaseA');
+          subscriber.complete();
         }, 200);
       });
     },
@@ -39,6 +40,14 @@ const actions = {
     handler: 'nonexistent',
     action() {
       console.log('plugin not exists.');
+    },
+  },
+  rxActionWithError: {
+    handler: 'rx',
+    action() {
+      return new Observable(() => {
+        throw new Error('Something went wrong.');
+      });
     },
   },
 };
@@ -82,42 +91,41 @@ describe('Store#dispatch overload 1', () => {
     store.dispatch('increaseA', n);
     expect(store.getState().a).toBe(current + n);
   });
-  test('Error message will be displayed when dispatch a nonexistent action type', () => {
-    const spyError = jest.spyOn(console, 'error');
-    expect(spyError).not.toHaveBeenCalled();
-    store.dispatch('nonexistent');
-    expect(spyError).toHaveBeenCalledTimes(1);
-    expect(spyError).toHaveBeenCalledWith(
-      `The action 'nonexistent' is not exist.`,
-    );
-    spyError.mockClear();
+  test('An exception is thrown when dispatch a nonexistent action type', async () => {
+    try {
+      await store.dispatch('nonexistent');
+    } catch (e) {
+      expect(e.message).toBe("The action 'nonexistent' is not exist.");
+    }
   });
   test('Async action works', async () => {
     const current = store.getState().a;
     const n = 10;
     store.dispatch('asyncIncreaseA', n);
-    await sleep(600);
+    await sleep(300);
     expect(store.getState().a).toBe(current + n);
+    await store.dispatch('asyncIncreaseA', n);
+    expect(store.getState().a).toBe(current + n * 2);
   });
 });
 
 describe('Store#dispatch overload 1, plugin action', () => {
   const store = createStore();
   store.registerActionHandler('rx', (pluginAction, params) => {
-    pluginAction.action(params).subscribe({
-      next(value) {
-        if (Array.isArray(value)) {
-          store.dispatch(...value);
-        } else if (typeof value === 'string') {
-          store.dispatch(value);
-        }
-      },
-      error(e) {
-        throw e;
-      },
-      complete() {
-        console.log('action complete');
-      },
+    return new Promise((resolve, reject) => {
+      pluginAction.action(params).subscribe({
+        next(value) {
+          if (Array.isArray(value)) {
+            store.dispatch(...value);
+          } else if (typeof value === 'string') {
+            store.dispatch(value);
+          }
+        },
+        error: reject,
+        complete() {
+          resolve();
+        },
+      });
     });
   });
   test('`rxIncreaseA` should work', async () => {
@@ -129,11 +137,24 @@ describe('Store#dispatch overload 1, plugin action', () => {
     expect(store.getState().a).toBe(initialState.a + 7);
     await sleep(300);
     expect(store.getState().a).toBe(initialState.a + 8);
+    await store.dispatch('rxIncreaseA', 10);
+    expect(store.getState().a).toBe(initialState.a + 19);
   });
-  test('handler plugin not exists will not mutate state', () => {
+  test('handler plugin not exists will not mutate state and will catch an exception', async () => {
     const state = store.getState();
-    store.dispatch('pluginNonexistent');
+    try {
+      await store.dispatch('pluginNonexistent');
+    } catch (e) {
+      expect(e.message).toBe("The handler 'nonexistent' is not registered");
+    }
     expect(store.getState()).toBe(state);
+  });
+  test('`rxActionWithError` will throw an exception and we can catch it.', async () => {
+    try {
+      await store.dispatch('rxActionWithError');
+    } catch (e) {
+      expect(e.message).toBe('Something went wrong.');
+    }
   });
 });
 
@@ -157,8 +178,10 @@ describe('Store#dispatch overload 2', () => {
     const current = store.getState().a;
     const n = 10;
     store.dispatch(actions.asyncIncreaseA, n);
-    await sleep(600);
+    await sleep(300);
     expect(store.getState().a).toBe(current + n);
+    await store.dispatch(actions.asyncIncreaseA, n);
+    expect(store.getState().a).toBe(current + n * 2);
   });
 });
 

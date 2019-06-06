@@ -31,13 +31,12 @@ export type Action<T = any, K = undefined> = (
 /**
  * Type of plugin handler to handle actions
  * @param {PluginAction} pluginAction the action object of plugins
- * @param {K} params the parameters of action
- * @template K the type of your action parameters
+ * @param {any} params the parameters of action
  */
-export type ActionHandler<K = undefined> = (
+export type ActionHandler = (
   pluginAction: PluginAction,
-  params?: K,
-) => void;
+  params?: any,
+) => Promise<void>;
 
 /**
  * Listener type
@@ -78,7 +77,7 @@ export default class Store<T = any> {
    * plugin handlers to handle action
    */
   private actionHandlers: {
-    [name: string]: ActionHandler<any>;
+    [name: string]: ActionHandler;
   } = {};
 
   /**
@@ -116,13 +115,9 @@ export default class Store<T = any> {
   /**
    * Register a plugin handler to handle action
    * @param {string} name the plugin handler's name
-   * @param {ActionHandler<K>} handler the function to handle action
-   * @template K the type of your action parameters
+   * @param {ActionHandler} handler the function to handle action
    */
-  public registerActionHandler<K = undefined>(
-    name: string,
-    handler: ActionHandler<K>,
-  ) {
+  public registerActionHandler(name: string, handler: ActionHandler) {
     this.actionHandlers[name] = handler;
   }
 
@@ -133,8 +128,9 @@ export default class Store<T = any> {
    * @param {string} action the name of action
    * @param {K} params the type of your action parameters
    * @template K the type of your action parameters
+   * @returns a promise to indicate the action is totally finished
    */
-  public dispatch<K = undefined>(action: string, params?: K): void;
+  public dispatch<K = undefined>(action: string, params?: K): Promise<void>;
 
   /**
    * An overload of dispatch
@@ -143,51 +139,71 @@ export default class Store<T = any> {
    * @param {Action<T, K>} action the action function
    * @param {K} params the type of your action parameters
    * @template K the type of your action parameters
+   * @returns a promise to indicate the action is totally finished
    */
-  public dispatch<K = undefined>(action: Action<T, K>, params?: K): void;
+  public dispatch<K = undefined>(
+    action: Action<T, K>,
+    params?: K,
+  ): Promise<void>;
 
   /**
    * Implementation for overloads
    */
-  public dispatch<K = undefined>(action: string | Action<T, K>, params?: K) {
-    if (typeof action === 'string') {
-      const theAction = this.actions[action];
-      if (theAction === undefined) {
-        // eslint-disable-next-line no-console
-        console.error(`The action '${action}' is not exist.`);
-        return;
-      }
-      const anyAction = theAction as any;
-      if (typeof anyAction.handler === 'string') {
-        const pluginAction = theAction as PluginAction;
-        const handler = this.actionHandlers[
-          pluginAction.handler
-        ] as ActionHandler<K>;
-        // this is a runtime check
-        if (handler !== undefined) {
-          handler(pluginAction, params);
+  public dispatch<K = undefined>(
+    action: string | Action<T, K>,
+    params?: K,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (typeof action === 'string') {
+        const theAction = this.actions[action];
+        if (theAction === undefined) {
+          reject(new Error(`The action '${action}' is not exist.`));
+          return;
+        }
+        const anyAction = theAction as any;
+        if (typeof anyAction.handler === 'string') {
+          const pluginAction = theAction as PluginAction;
+          const handler = this.actionHandlers[pluginAction.handler];
+          // this is a runtime check
+          if (handler !== undefined) {
+            handler(pluginAction, params)
+              .then(() => resolve())
+              .catch(e => reject(e));
+          } else {
+            reject(
+              new Error(`The handler '${anyAction.handler}' is not registered`),
+            );
+          }
+        } else {
+          const normalAction = theAction as Action<T, K>;
+          const nextState = produce(this.state, draftState =>
+            normalAction(draftState, params),
+          );
+          if (nextState instanceof Promise) {
+            nextState.then(state => {
+              this.updateState(action, state);
+              resolve();
+            });
+          } else {
+            this.updateState(action, nextState);
+            resolve();
+          }
         }
       } else {
-        const normalAction = theAction as Action<T, K>;
         const nextState = produce(this.state, draftState =>
-          normalAction(draftState, params),
+          action(draftState, params),
         );
         if (nextState instanceof Promise) {
-          nextState.then(state => this.triggerListeners(action, state));
+          nextState.then(state => {
+            this.updateState('NO_TYPE', state);
+            resolve();
+          });
         } else {
-          this.triggerListeners(action, nextState);
+          this.updateState('NO_TYPE', nextState);
+          resolve();
         }
       }
-    } else {
-      const nextState = produce(this.state, draftState =>
-        action(draftState, params),
-      );
-      if (nextState instanceof Promise) {
-        nextState.then(state => this.triggerListeners('NO_TYPE', state));
-      } else {
-        this.triggerListeners('NO_TYPE', nextState);
-      }
-    }
+    });
   }
 
   /**
@@ -196,7 +212,7 @@ export default class Store<T = any> {
    * @param {T} nextState the next state
    * @template T the type of your state
    */
-  private triggerListeners(type: string, nextState: T) {
+  private updateState(type: string, nextState: T) {
     // only update state and trigger listeners when state **really** changed
     if (this.state !== nextState) {
       const prevState = this.state;

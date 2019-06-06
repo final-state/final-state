@@ -1,6 +1,6 @@
 {
   "name": "final-state",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "main": "dist/index.js",
   "author": "yuanqiulee@gmail.com",
   "license": "MIT",

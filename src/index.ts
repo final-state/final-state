@@ -48,7 +48,7 @@ export type Listener<T = any> = (type?: string, prevState?: T) => void;
 /**
  * Remove the Listener
  */
-export interface unSubscribe {
+export interface UnSubscribe {
   (): void;
 }
 
@@ -233,7 +233,7 @@ export default class Store<T = any> {
    * @param {Listener<T>} listener listener will be triggered after `dispatch` is called.
    * @template T the type of your state
    */
-  public subscribe(listener: Listener<T>): unSubscribe {
+  public subscribe(listener: Listener<T>): UnSubscribe {
     this.listeners.push(listener);
     return () => this.listeners.splice(this.listeners.indexOf(listener), 1);
   }

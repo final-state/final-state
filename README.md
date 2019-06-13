@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.com/final-state/final-state.svg?branch=master)](https://travis-ci.com/final-state/final-state)
 [![codecov.io](https://codecov.io/gh/final-state/final-state/branch/master/graph/badge.svg)](https://codecov.io/gh/final-state/final-state)
 [![Known Vulnerabilities](https://snyk.io/test/github/final-state/final-state/badge.svg)](https://snyk.io/test/github/final-state/final-state)
-[![minified + gzip](https://badgen.net/bundlephobia/minzip/final-state@0.3.0)](https://bundlephobia.com/result?p=final-state@0.3.0)
+[![minified + gzip](https://badgen.net/bundlephobia/minzip/final-state@0.4.0)](https://bundlephobia.com/result?p=final-state@0.4.0)
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
 # final-state
@@ -107,6 +107,13 @@ Get the latest state object. Keep in mind that you shouldn't mutate the state ob
 ### Store#subscribe(listener)
 
 Subscribe the changes of state. Once the state are changed by `Store#dispatch`, the `listener` will be called.
+
+It returns a function to let you unsubscribe this listener:
+
+```javascript
+const unSubscribe = store.subscribe(listener);
+unSubscribe();
+```
 
 #### listener
 

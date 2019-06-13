@@ -230,6 +230,23 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     store.dispatch('increaseA');
     expect(listenerRunned).toBe(2);
   });
+  test("Listener won't be triggered after unSubscribe(returned by Subscribe)", () => {
+    const store = createStore();
+    let listenerRunned = 0;
+    function listener() {
+      listenerRunned += 1;
+    }
+    const unsubscribe = store.subscribe(listener);
+    expect(listenerRunned).toBe(0);
+    store.dispatch('increaseA');
+    expect(listenerRunned).toBe(1);
+    store.unSubscribe(() => {});
+    store.dispatch('increaseA');
+    expect(listenerRunned).toBe(2);
+    unsubscribe();
+    store.dispatch('increaseA');
+    expect(listenerRunned).toBe(2);
+  });
   test('Listener can access the previous state', () => {
     const store = createStore();
     let t = null;

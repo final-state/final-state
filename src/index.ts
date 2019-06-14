@@ -46,13 +46,6 @@ export type ActionHandler = (
 export type Listener<T = any> = (type?: string, prevState?: T) => void;
 
 /**
- * Remove the Listener
- */
-export interface UnSubscribe {
-  (): void;
-}
-
-/**
  * Action map
  */
 export interface ActionMap {
@@ -232,20 +225,20 @@ export default class Store<T = any> {
    * @public subscribe the changes of state
    * @param {Listener<T>} listener listener will be triggered after `dispatch` is called.
    * @template T the type of your state
+   *
+   * @returns A function to do unsubscription
    */
-  public subscribe(listener: Listener<T>): UnSubscribe {
+  public subscribe(listener: Listener<T>) {
     this.listeners.push(listener);
-    return () => this.listeners.splice(this.listeners.indexOf(listener), 1);
+    return () => this.unSubscribe(listener);
   }
 
   /**
    * @public unsubscribe a listener
    * @param {Listener<T>} listener the listener that used to subscribe
    */
-  public unSubscribe(listener: Listener<T>): void {
-    const index = this.listeners.findIndex(
-      (item): boolean => item === listener,
-    );
+  public unSubscribe(listener: Listener<T>) {
+    const index = this.listeners.indexOf(listener);
     if (index >= 0) {
       this.listeners.splice(index, 1);
     }

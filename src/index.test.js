@@ -91,12 +91,10 @@ describe('Store#dispatch overload 1', () => {
     store.dispatch('increaseA', n);
     expect(store.getState().a).toBe(current + n);
   });
-  test('An exception is thrown when dispatch a nonexistent action type', async () => {
-    try {
-      await store.dispatch('nonexistent');
-    } catch (e) {
-      expect(e.message).toBe("The action 'nonexistent' is not exist.");
-    }
+  test('No exception is thrown when dispatch a nonexistent action type', async () => {
+    const state = store.getState();
+    await expect(store.dispatch('nonexistent')).resolves.toBe(undefined);
+    expect(store.getState()).toBe(state);
   });
   test('Async action works', async () => {
     const current = store.getState().a;
@@ -142,11 +140,7 @@ describe('Store#dispatch overload 1, plugin action', () => {
   });
   test('handler plugin not exists will not mutate state and will catch an exception', async () => {
     const state = store.getState();
-    try {
-      await store.dispatch('pluginNonexistent');
-    } catch (e) {
-      expect(e.message).toBe("The handler 'nonexistent' is not registered");
-    }
+    await expect(store.dispatch('pluginNonexistent')).rejects.toThrowError("The handler 'nonexistent' is not registered");
     expect(store.getState()).toBe(state);
   });
   test('`rxActionWithError` will throw an exception and we can catch it.', async () => {

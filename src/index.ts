@@ -157,7 +157,7 @@ export default class Store<T = any> {
       if (typeof action === 'string') {
         const theAction = this.actions[action];
         if (theAction === undefined) {
-          reject(new Error(`The action '${action}' is not exist.`));
+          resolve();
           return;
         }
         const anyAction = theAction as any;

@@ -140,7 +140,7 @@ describe('Store#dispatch overload 1, plugin action', () => {
   });
   test('handler plugin not exists will not mutate state and will catch an exception', async () => {
     const state = store.getState();
-    await expect(store.dispatch('pluginNonexistent')).rejects.toThrowError("The handler 'nonexistent' is not registered");
+    await expect(store.dispatch('pluginNonexistent')).rejects.toThrow("The handler 'nonexistent' is not registered");
     expect(store.getState()).toBe(state);
   });
   test('`rxActionWithError` will throw an exception and we can catch it.', async () => {

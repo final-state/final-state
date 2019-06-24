@@ -1,6 +1,6 @@
 /* eslint-disable no-console,no-param-reassign */
 import { Observable } from 'rxjs';
-import { createStore } from 'final-state';
+import { createStore } from '..';
 
 function sleep(time) {
   return new Promise(resolve => setTimeout(resolve, time));

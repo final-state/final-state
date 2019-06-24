@@ -1,27 +1,29 @@
 /* eslint-disable no-console,no-param-reassign */
 import { Observable } from 'rxjs';
-import { createStore } from '..';
+import { createStore, ActionMap, PluginAction, Action, Listener } from '../src';
 
-function sleep(time) {
+function sleep(time: number) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
 
-const initialState = {
+interface State {
+  a: number;
+  b: string;
+  c: boolean;
+}
+
+const initialState: State = {
   a: 1,
   b: 'good',
   c: true,
 };
 
-const actions = {
+const actions: ActionMap = {
   increaseA(draftState, n = 1) {
     draftState.a += n;
   },
   toggleC(draftState) {
     draftState.c = !draftState.c;
-  },
-  async asyncIncreaseA(draftState, n = 1) {
-    await sleep(200);
-    draftState.a += n;
   },
   doNothing() {},
   rxIncreaseA: {
@@ -94,36 +96,32 @@ describe('Store#dispatch overload 1', () => {
       expect(e.message).toBe("The action 'nonexistent' is not exist.");
     }
   });
-  test('Async action works', async () => {
-    const current = store.getState().a;
-    const n = 10;
-    store.dispatch('asyncIncreaseA', n);
-    await sleep(300);
-    expect(store.getState().a).toBe(current + n);
-    await store.dispatch('asyncIncreaseA', n);
-    expect(store.getState().a).toBe(current + n * 2);
-  });
 });
 
 describe('Store#dispatch overload 1, plugin action', () => {
   const store = createStore(initialState, actions, 'test');
-  store.registerActionHandler('rx', (pluginAction, params) => {
-    return new Promise((resolve, reject) => {
-      pluginAction.action(params).subscribe({
-        next(value) {
-          if (Array.isArray(value)) {
-            store.dispatch(...value);
-          } else if (typeof value === 'string') {
-            store.dispatch(value);
-          }
-        },
-        error: reject,
-        complete() {
-          resolve();
-        },
+  type NextValue = [string, any] | string;
+  type RxAction = (params: any) => Observable<NextValue>;
+  store.registerActionHandler(
+    'rx',
+    (pluginAction: PluginAction<RxAction>, params) => {
+      return new Promise((resolve, reject) => {
+        pluginAction.action(params).subscribe({
+          next(value) {
+            if (Array.isArray(value)) {
+              store.dispatch(...value);
+            } else if (typeof value === 'string') {
+              store.dispatch(value);
+            }
+          },
+          error: reject,
+          complete() {
+            resolve();
+          },
+        });
       });
-    });
-  });
+    },
+  );
   test('`rxIncreaseA` should work', async () => {
     store.dispatch('rxIncreaseA');
     expect(store.getState().a).toBe(initialState.a + 1);
@@ -157,27 +155,18 @@ describe('Store#dispatch overload 1, plugin action', () => {
 describe('Store#dispatch overload 2', () => {
   const store = createStore(initialState, actions, 'test');
   test('`incrementAction` should work', () => {
-    store.dispatch(actions.increaseA);
+    store.dispatch(actions.increaseA as Action<State>);
     expect(store.getState().a).toBe(initialState.a + 1);
   });
   test('`toggleAction` should work', () => {
-    store.dispatch(actions.toggleC);
+    store.dispatch(actions.toggleC as Action<State>);
     expect(store.getState().c).toBe(!initialState.c);
   });
   test('Action with parameters works', () => {
     const current = store.getState().a;
     const n = 10;
-    store.dispatch(actions.increaseA, n);
+    store.dispatch(actions.increaseA as Action<State, number>, n);
     expect(store.getState().a).toBe(current + n);
-  });
-  test('Async action works', async () => {
-    const current = store.getState().a;
-    const n = 10;
-    store.dispatch(actions.asyncIncreaseA, n);
-    await sleep(300);
-    expect(store.getState().a).toBe(current + n);
-    await store.dispatch(actions.asyncIncreaseA, n);
-    expect(store.getState().a).toBe(current + n * 2);
   });
 });
 
@@ -246,11 +235,11 @@ describe('Store#subscribe & Store#unSubscribe', () => {
   test('Listener can access the previous state', () => {
     const store = createStore(initialState, actions, 'test');
     let t = null;
-    let prev = null;
-    function listener(type, prevState) {
+    let prev = store.getState();
+    const listener: Listener<State> = (type, prevState) => {
       t = type;
       prev = prevState;
-    }
+    };
     store.subscribe(listener);
     store.dispatch('increaseA');
     expect(t).toBe('increaseA');

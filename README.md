@@ -1,7 +1,7 @@
-[![Build Status](https://travis-ci.com/final-state/final-state.svg?branch=next)](https://travis-ci.com/final-state/final-state)
+[![Build Status](https://travis-ci.com/final-state/final-state.svg?branch=master)](https://travis-ci.com/final-state/final-state)
 [![codecov.io](https://codecov.io/gh/final-state/final-state/branch/master/graph/badge.svg)](https://codecov.io/gh/final-state/final-state)
 [![Known Vulnerabilities](https://snyk.io/test/github/final-state/final-state/badge.svg)](https://snyk.io/test/github/final-state/final-state)
-[![minified + gzip](https://badgen.net/bundlephobia/minzip/@liyuanqiu/final-state@1.0.4)](https://bundlephobia.com/result?p=@liyuanqiu/final-state@1.0.4)
+[![minified + gzip](https://badgen.net/bundlephobia/minzip/final-state@1.0.5)](https://bundlephobia.com/result?p=final-state@1.0.5)
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
 # final-state
@@ -22,7 +22,7 @@ yarn add final-state
 ## Basic Example
 
 ```javascript
-import { createStore } from 'final-state';
+import Store from 'final-state';
 
 // Define initial state
 const initialState = {
@@ -38,7 +38,7 @@ const actions = {
 };
 
 // Create store instance
-const store = createStore(initialState, actions, 'store-name');
+const store = new Store(initialState, actions, 'store-name');
 
 // Print state
 console.log('INITIAL STATE:', store.getState());
@@ -69,7 +69,7 @@ CURRENT STATE: Object {a: 2, b: "good"}
 
 ## API Reference
 
-### createStore(initialState, actions[, name])
+### new Store(initialState, actions[, name])
 
 Create a store instance. You can create multiple stores in your app.
 
@@ -245,7 +245,7 @@ Let's see a simple example:
 ```javascript
 // Register a custom handler that can handle observable actions
 import { Observable } from 'rxjs';
-import { createStore } from 'final-state';
+import Store from 'final-state';
 
 const initialState = {
   a: 0,
@@ -269,11 +269,7 @@ const actions = {
   },
 };
 
-const store = createStore(
-  initialState,
-  actions,
-  'custom-handler-example-store',
-);
+const store = new Store(initialState, actions, 'custom-handler-example-store');
 
 store.registerActionHandler('rx', (pluginAction, params) => {
   return new Promise((resolve, reject) => {
@@ -302,7 +298,7 @@ store.dispatch('rxIncreaseA', 5);
 ## Use with `typescript`
 
 ```typescript
-import { createStore, Action, ActionMap } from 'final-state';
+import Store, { Action, ActionMap } from 'final-state';
 
 // Define state shape
 interface State {
@@ -324,7 +320,7 @@ const actions: ActionMap<State> = {
 };
 
 // Create store instance
-const store = createStore<State>(initialState, actions);
+const store = new Store<State>(initialState, actions);
 
 // Print state
 console.log('INITIAL STATE:', store.getState());

@@ -26,7 +26,7 @@ export interface PluginAction<T = any> {
 export type Action<T = any, K = undefined> = (
   draftState: Draft<T>,
   params?: K,
-) => void | Promise<undefined>;
+) => void;
 
 /**
  * Type of plugin handler to handle actions
@@ -43,7 +43,7 @@ export type ActionHandler = (
  *
  * @template T the type of your state
  */
-export type Listener<T = any> = (type?: string, prevState?: T) => void;
+export type Listener<T = any> = (type: string, prevState: T) => void;
 
 /**
  * Action map
@@ -189,29 +189,15 @@ class StoreClass<T = any> implements Store<T> {
           const nextState = produce(this.state, draftState =>
             normalAction(draftState, params),
           );
-          if (nextState instanceof Promise) {
-            nextState.then(state => {
-              this.updateState(action, state);
-              resolve();
-            });
-          } else {
-            this.updateState(action, nextState);
-            resolve();
-          }
+          this.updateState(action, nextState);
+          resolve();
         }
       } else {
         const nextState = produce(this.state, draftState =>
           action(draftState, params),
         );
-        if (nextState instanceof Promise) {
-          nextState.then(state => {
-            this.updateState('NO_TYPE', state);
-            resolve();
-          });
-        } else {
-          this.updateState('NO_TYPE', nextState);
-          resolve();
-        }
+        this.updateState('NO_TYPE', nextState);
+        resolve();
       }
     });
   }

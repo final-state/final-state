@@ -1,6 +1,6 @@
 {
   "name": "@liyuanqiu/final-state",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "main": "dist/cjs/index.min.js",
   "module": "dist/es/index.min.js",
   "typings": "dist/cjs/index.d.ts",

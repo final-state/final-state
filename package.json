@@ -1,8 +1,9 @@
 {
   "name": "@liyuanqiu/final-state",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "dist/cjs/index.min.js",
   "module": "dist/es/index.min.js",
+  "typings": "dist/cjs/index.d.ts",
   "author": "yuanqiulee@gmail.com",
   "license": "MIT",
   "repository": {

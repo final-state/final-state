@@ -1,6 +1,6 @@
 {
   "name": "@liyuanqiu/final-state",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "author": "yuanqiulee@gmail.com",
   "main": "dist/index.js",
   "module": "dist/final-state.esm.js",

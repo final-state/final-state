@@ -1,6 +1,6 @@
 {
   "name": "@liyuanqiu/final-state",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "dist/cjs/index.min.js",
   "module": "dist/es/index.min.js",
   "author": "yuanqiulee@gmail.com",

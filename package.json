@@ -1,6 +1,6 @@
 {
   "name": "@liyuanqiu/final-state",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "dist/index.js",
   "module": "dist/final-state.esm.js",
   "typings": "dist/index.d.ts",

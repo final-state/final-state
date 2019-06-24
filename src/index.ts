@@ -58,7 +58,7 @@ export interface Store<T = any> {
   registerActionHandler(name: string, handler: ActionHandler): void;
   dispatch<K = undefined>(action: string, params?: K): Promise<void>;
   dispatch<K = undefined>(action: Action<T, K>, params?: K): Promise<void>;
-  subscribe(listener: Listener<T>): Function;
+  subscribe(listener: Listener<T>): () => void;
   unSubscribe(listener: Listener<T>): void;
 }
 

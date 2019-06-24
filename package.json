@@ -1,11 +1,17 @@
 {
   "name": "@liyuanqiu/final-state",
   "version": "1.0.6",
+  "author": "yuanqiulee@gmail.com",
   "main": "dist/index.js",
   "module": "dist/final-state.esm.js",
   "typings": "dist/index.d.ts",
   "sideEffects": false,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/final-state/final-state"
+  },
+  "homepage": "https://final-state.github.io/final-state",
   "files": [
     "dist"
   ],

@@ -52,7 +52,7 @@ export interface ActionMap {
   [type: string]: Action<any, any> | PluginAction;
 }
 
-export interface Store<T> {
+export interface Store<T = any> {
   name: string;
   getState(): T;
   registerActionHandler(name: string, handler: ActionHandler): void;

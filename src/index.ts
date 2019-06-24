@@ -52,6 +52,16 @@ export interface ActionMap {
   [type: string]: Action<any, any> | PluginAction;
 }
 
+export interface Store<T> {
+  name: string;
+  getState(): T;
+  registerActionHandler(name: string, handler: ActionHandler): void;
+  dispatch<K = undefined>(action: string, params?: K): Promise<void>;
+  dispatch<K = undefined>(action: Action<T, K>, params?: K): Promise<void>;
+  subscribe(listener: Listener<T>): Function;
+  unSubscribe(listener: Listener<T>): void;
+}
+
 /**
  * class Store
  *
@@ -61,7 +71,7 @@ export interface ActionMap {
  *
  * @template T the type of your state
  */
-export default class Store<T = any> {
+class StoreClass<T = any> implements Store<T> {
   /**
    * state object
    * @template T the type of your state
@@ -243,4 +253,12 @@ export default class Store<T = any> {
       this.listeners.splice(index, 1);
     }
   }
+}
+
+export function createStore<T>(
+  initialState: T,
+  actions: ActionMap,
+  name?: string,
+): Store<T> {
+  return new StoreClass(initialState, actions, name);
 }

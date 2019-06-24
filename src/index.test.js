@@ -1,6 +1,6 @@
 /* eslint-disable no-console,no-param-reassign */
 import { Observable } from 'rxjs';
-import Store from '../dist';
+import { createStore } from 'final-state';
 
 function sleep(time) {
   return new Promise(resolve => setTimeout(resolve, time));
@@ -52,12 +52,8 @@ const actions = {
   },
 };
 
-function createStore() {
-  return new Store(initialState, actions, 'test-store');
-}
-
 describe('Create store & Store#getState', () => {
-  const store = createStore();
+  const store = createStore(initialState, actions, 'test');
   test("New store's state should have a same ref with the initial state", () => {
     expect(store.getState()).toBe(initialState);
   });
@@ -66,17 +62,17 @@ describe('Create store & Store#getState', () => {
   });
   test("Store instance's name should be same with the one passed in", () => {
     const name = 'name';
-    const s = new Store({}, {}, name);
+    const s = createStore({}, {}, name);
     expect(s.name).toBe(`Store[${name}]`);
   });
   test("Store instance's name should be correct when no name passed in", () => {
-    const s = new Store({}, {});
+    const s = createStore({}, {});
     expect(s.name).toMatch(/^Store\[NO_NAME_STORE_\d+]$/);
   });
 });
 
 describe('Store#dispatch overload 1', () => {
-  const store = createStore();
+  const store = createStore(initialState, actions, 'test');
   test('`incrementAction` should work', () => {
     store.dispatch('increaseA');
     expect(store.getState().a).toBe(initialState.a + 1);
@@ -110,7 +106,7 @@ describe('Store#dispatch overload 1', () => {
 });
 
 describe('Store#dispatch overload 1, plugin action', () => {
-  const store = createStore();
+  const store = createStore(initialState, actions, 'test');
   store.registerActionHandler('rx', (pluginAction, params) => {
     return new Promise((resolve, reject) => {
       pluginAction.action(params).subscribe({
@@ -159,7 +155,7 @@ describe('Store#dispatch overload 1, plugin action', () => {
 });
 
 describe('Store#dispatch overload 2', () => {
-  const store = createStore();
+  const store = createStore(initialState, actions, 'test');
   test('`incrementAction` should work', () => {
     store.dispatch(actions.increaseA);
     expect(store.getState().a).toBe(initialState.a + 1);
@@ -187,7 +183,7 @@ describe('Store#dispatch overload 2', () => {
 
 describe('Store#subscribe & Store#unSubscribe', () => {
   test("Listener won't be triggered when an action hasn't alter state", () => {
-    const store = createStore();
+    const store = createStore(initialState, actions, 'test');
 
     let listenerRunned = 0;
     function listener() {
@@ -201,7 +197,7 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     expect(listenerRunned).toBe(0);
   });
   test('Listener will be triggered when an action altered state', () => {
-    const store = createStore();
+    const store = createStore(initialState, actions, 'test');
     let listenerRunned = 0;
     function listener() {
       listenerRunned += 1;
@@ -214,7 +210,7 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     expect(listenerRunned).toBe(2);
   });
   test("Listener won't be triggered after unSubscribe", () => {
-    const store = createStore();
+    const store = createStore(initialState, actions, 'test');
     let listenerRunned = 0;
     function listener() {
       listenerRunned += 1;
@@ -231,7 +227,7 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     expect(listenerRunned).toBe(2);
   });
   test("Listener won't be triggered after unSubscribe(returned by Subscribe)", () => {
-    const store = createStore();
+    const store = createStore(initialState, actions, 'test');
     let listenerRunned = 0;
     function listener() {
       listenerRunned += 1;
@@ -248,7 +244,7 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     expect(listenerRunned).toBe(2);
   });
   test('Listener can access the previous state', () => {
-    const store = createStore();
+    const store = createStore(initialState, actions, 'test');
     let t = null;
     let prev = null;
     function listener(type, prevState) {

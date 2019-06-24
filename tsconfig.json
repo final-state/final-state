@@ -8,11 +8,9 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "commonjs",
     "moduleResolution": "node",
-    "noEmit": false,
-    "outDir": "dist",
-    "sourceMap": true
+    "sourceMap": true,
+    "noEmit": false
   },
   "include": ["src"]
 }

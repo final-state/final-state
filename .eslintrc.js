@@ -14,6 +14,7 @@ module.exports = {
     '@typescript-eslint/indent': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     'no-dupe-class-members': 'off',
+    'import/no-extraneous-dependencies': 'off',
   },
   settings: {
     'import/resolver': {

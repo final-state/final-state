@@ -100,7 +100,9 @@ describe('Store#dispatch overload 1', () => {
 
 describe('Store#dispatch overload 1, plugin action', () => {
   const store = createStore(initialState, actions, 'test');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type NextValue = [string, any] | string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   type RxAction = (params: any) => Observable<NextValue>;
   store.registerActionHandler(
     'rx',

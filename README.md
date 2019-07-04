@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.com/final-state/final-state.svg?branch=master)](https://travis-ci.com/final-state/final-state)
 [![codecov.io](https://codecov.io/gh/final-state/final-state/branch/master/graph/badge.svg)](https://codecov.io/gh/final-state/final-state)
 [![Known Vulnerabilities](https://snyk.io/test/github/final-state/final-state/badge.svg)](https://snyk.io/test/github/final-state/final-state)
-[![minified + gzip](https://badgen.net/bundlephobia/minzip/final-state@1.0.7)](https://bundlephobia.com/result?p=final-state@1.0.7)
+[![minified + gzip](https://badgen.net/bundlephobia/minzip/final-state@1.1.0)](https://bundlephobia.com/result?p=final-state@1.1.0)
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 
 # final-state

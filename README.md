@@ -22,7 +22,7 @@ yarn add final-state
 ## Basic Example
 
 ```javascript
-import Store from 'final-state';
+import { createStore } from 'final-state';
 
 // Define initial state
 const initialState = {
@@ -38,7 +38,7 @@ const actions = {
 };
 
 // Create store instance
-const store = new Store(initialState, actions, 'store-name');
+const store = createStore(initialState, actions, 'store-name');
 
 // Print state
 console.log('INITIAL STATE:', store.getState());
@@ -69,7 +69,7 @@ CURRENT STATE: Object {a: 2, b: "good"}
 
 ## API Reference
 
-### new Store(initialState, actions[, name])
+### createStore(initialState, actions[, name])
 
 Create a store instance. You can create multiple stores in your app.
 
@@ -245,7 +245,7 @@ Let's see a simple example:
 ```javascript
 // Register a custom handler that can handle observable actions
 import { Observable } from 'rxjs';
-import Store from 'final-state';
+import { createStore } from 'final-state';
 
 const initialState = {
   a: 0,
@@ -269,7 +269,7 @@ const actions = {
   },
 };
 
-const store = new Store(initialState, actions, 'custom-handler-example-store');
+const store = createStore(initialState, actions, 'custom-handler-example-store');
 
 store.registerActionHandler('rx', (pluginAction, params) => {
   return new Promise((resolve, reject) => {
@@ -298,7 +298,7 @@ store.dispatch('rxIncreaseA', 5);
 ## Use with `typescript`
 
 ```typescript
-import Store, { Action, ActionMap } from 'final-state';
+import { createStore, Action, ActionMap } from 'final-state';
 
 // Define state shape
 interface State {
@@ -320,7 +320,7 @@ const actions: ActionMap<State> = {
 };
 
 // Create store instance
-const store = new Store<State>(initialState, actions);
+const store = createStore<State>(initialState, actions);
 
 // Print state
 console.log('INITIAL STATE:', store.getState());

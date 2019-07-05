@@ -1,0 +1,6 @@
+/coverage/
+/.rts2_cache_cjs/
+/.rts2_cache_esm/
+/coverage/
+/dist/
+/node_modules/

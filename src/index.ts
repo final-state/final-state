@@ -26,7 +26,7 @@ export interface PluginAction<T = any> {
 export type Action<T = any, K = undefined> = (
   draftState: Draft<T>,
   params?: K,
-) => void | Promise<undefined>;
+) => void;
 
 /**
  * Type of plugin handler to handle actions
@@ -43,13 +43,23 @@ export type ActionHandler = (
  *
  * @template T the type of your state
  */
-export type Listener<T = any> = (type?: string, prevState?: T) => void;
+export type Listener<T = any> = (type: string, prevState: T) => void;
 
 /**
  * Action map
  */
 export interface ActionMap {
   [type: string]: Action<any, any> | PluginAction;
+}
+
+export interface Store<T = any> {
+  name: string;
+  getState(): T;
+  registerActionHandler(name: string, handler: ActionHandler): void;
+  dispatch<K = undefined>(action: string, params?: K): Promise<void>;
+  dispatch<K = undefined>(action: Action<T, K>, params?: K): Promise<void>;
+  subscribe(listener: Listener<T>): () => void;
+  unSubscribe(listener: Listener<T>): void;
 }
 
 /**
@@ -61,7 +71,7 @@ export interface ActionMap {
  *
  * @template T the type of your state
  */
-export default class Store<T = any> {
+class StoreClass<T = any> implements Store<T> {
   /**
    * state object
    * @template T the type of your state
@@ -179,29 +189,15 @@ export default class Store<T = any> {
           const nextState = produce(this.state, draftState =>
             normalAction(draftState, params),
           );
-          if (nextState instanceof Promise) {
-            nextState.then(state => {
-              this.updateState(action, state);
-              resolve();
-            });
-          } else {
-            this.updateState(action, nextState);
-            resolve();
-          }
+          this.updateState(action, nextState);
+          resolve();
         }
       } else {
         const nextState = produce(this.state, draftState =>
           action(draftState, params),
         );
-        if (nextState instanceof Promise) {
-          nextState.then(state => {
-            this.updateState('NO_TYPE', state);
-            resolve();
-          });
-        } else {
-          this.updateState('NO_TYPE', nextState);
-          resolve();
-        }
+        this.updateState('NO_TYPE', nextState);
+        resolve();
       }
     });
   }
@@ -243,4 +239,12 @@ export default class Store<T = any> {
       this.listeners.splice(index, 1);
     }
   }
+}
+
+export function createStore<T>(
+  initialState: T,
+  actions: ActionMap,
+  name?: string,
+): Store<T> {
+  return new StoreClass(initialState, actions, name);
 }

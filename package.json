@@ -1,46 +1,51 @@
 {
   "name": "final-state",
-  "version": "1.0.0",
-  "main": "dist/index.js",
+  "version": "1.1.0",
   "author": "yuanqiulee@gmail.com",
+  "main": "dist/index.js",
+  "module": "dist/final-state.esm.js",
+  "typings": "dist/index.d.ts",
+  "sideEffects": false,
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/final-state/final-state"
   },
   "homepage": "https://final-state.github.io/final-state",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "lint": "eslint -c .eslintrc.js --ext ts --fix src",
-    "build": "yarn lint && tsc",
+    "lint": "eslint -c .eslintrc.js --ext ts src",
     "pub": "bash scripts/pub.sh",
-    "test": "jest --coverage",
-    "update-readme": "node scripts/update-readme.js"
-  },
-  "sideEffects": false,
-  "devDependencies": {
-    "@babel/core": "^7.4.3",
-    "@babel/preset-env": "^7.4.3",
-    "@typescript-eslint/eslint-plugin": "^1.7.0",
-    "@typescript-eslint/parser": "^1.6.0",
-    "babel-jest": "^24.7.1",
-    "eslint": "5.3.0",
-    "eslint-config-airbnb": "17.1.0",
-    "eslint-config-prettier": "^4.3.0",
-    "eslint-plugin-import": "^2.14.0",
-    "eslint-plugin-jsx-a11y": "^6.1.1",
-    "eslint-plugin-prettier": "^3.1.0",
-    "eslint-plugin-react": "^7.11.0",
-    "immer": "^3.1.2",
-    "jest": "^24.7.1",
-    "prettier": "^1.17.1",
-    "rxjs": "^6.5.2",
-    "typescript": "^3.4.4"
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "test": "tsdx test --coverage"
   },
   "peerDependencies": {
     "immer": "^3.0.0"
   },
-  "files": [
-    "src",
-    "dist"
-  ]
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.15",
+    "@typescript-eslint/eslint-plugin": "^1.11.0",
+    "@typescript-eslint/parser": "^1.11.0",
+    "eslint": "^5.3.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-config-prettier": "^5.0.0",
+    "eslint-plugin-import": "^2.17.3",
+    "eslint-plugin-prettier": "^3.1.0",
+    "husky": "^2.4.1",
+    "immer": "^3.1.3",
+    "prettier": "^1.18.2",
+    "pretty-quick": "^1.11.1",
+    "rxjs": "^6.5.2",
+    "tsdx": "^0.7.2",
+    "tslib": "^1.10.0",
+    "typescript": "^3.5.2"
+  }
 }

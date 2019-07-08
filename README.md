@@ -269,11 +269,7 @@ const actions = {
   },
 };
 
-const store = createStore(
-  initialState,
-  actions,
-  'custom-handler-example-store',
-);
+const store = createStore(initialState, actions, 'custom-handler-example-store');
 
 store.registerActionHandler('rx', (pluginAction, params) => {
   return new Promise((resolve, reject) => {

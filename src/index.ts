@@ -60,6 +60,7 @@ export interface Store<T = any> {
   dispatch<K = undefined>(action: Action<T, K>, params?: K): Promise<void>;
   subscribe(listener: Listener<T>): () => void;
   unSubscribe(listener: Listener<T>): void;
+  addAction(name: string, action: Action<any, any>): void;
 }
 
 /**
@@ -129,6 +130,15 @@ class StoreClass<T = any> implements Store<T> {
    */
   public registerActionHandler(name: string, handler: ActionHandler) {
     this.actionHandlers[name] = handler;
+  }
+
+  /**
+   * Add action to actionMap
+   * @param {string} the action name
+   * @param {action} the action
+   */
+  public addAction(name: string, action: Action<any, any>) {
+    this.actions[name] = action;
   }
 
   /**
@@ -247,4 +257,26 @@ export function createStore<T>(
   name?: string,
 ): Store<T> {
   return new StoreClass(initialState, actions, name);
+}
+
+export function createActionWithParams<T, K>(
+  store: Store<T>,
+  actionName: string,
+  handler: (state: T, params: K) => void,
+): (params: K) => void {
+  store.addAction(actionName, handler);
+  return (params: K) => {
+    store.dispatch(actionName, params);
+  };
+}
+
+export function createAction<T>(
+  store: Store<T>,
+  actionName: string,
+  handler: (state: T) => void,
+): () => void {
+  store.addAction(actionName, handler);
+  return () => {
+    store.dispatch(actionName);
+  };
 }

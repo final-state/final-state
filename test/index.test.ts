@@ -1,6 +1,14 @@
 /* eslint-disable no-console,no-param-reassign */
 import { Observable } from 'rxjs';
-import { createStore, ActionMap, PluginAction, Action, Listener } from '../src';
+import {
+  createStore,
+  ActionMap,
+  PluginAction,
+  Action,
+  Listener,
+  createActionWithParams,
+  createAction,
+} from '../src';
 
 function sleep(time: number) {
   return new Promise(resolve => setTimeout(resolve, time));
@@ -247,5 +255,31 @@ describe('Store#subscribe & Store#unSubscribe', () => {
     expect(t).toBe('toggleC');
     expect(prev.c).toBe(true);
     expect(store.getState().c).toBe(false);
+  });
+});
+
+describe('createAction & createActionWithParams', () => {
+  test('Test the helper functions createAction and createActionWithParams', () => {
+    const initialState: { total: number } = { total: 0 };
+    const store = createStore(initialState, actions, 'test');
+    const addAction = createActionWithParams(
+      store,
+      'add',
+      (draftState: { total: number }, params: { num: number }) => {
+        draftState.total += params.num;
+      },
+    );
+    addAction({ num: 18 });
+    expect(store.getState().total).toBe(18);
+
+    const resetAction = createAction(
+      store,
+      'reset',
+      (draftState: { total: number }) => {
+        draftState.total = 0;
+      },
+    );
+    resetAction();
+    expect(store.getState().total).toBe(0);
   });
 });

@@ -20,7 +20,9 @@
     "pub": "bash scripts/pub.sh",
     "start": "tsdx watch",
     "build": "tsdx build",
-    "test": "tsdx test --coverage"
+    "test": "tsdx test --coverage",
+    "prepare": "yarn run snyk-protect",
+    "snyk-protect": "snyk-protect"
   },
   "peerDependencies": {
     "immer": "^3.0.0"
@@ -47,5 +49,9 @@
     "tsdx": "^0.7.2",
     "tslib": "^1.10.0",
     "typescript": "^3.6.2"
+  },
+  "snyk": true,
+  "dependencies": {
+    "@snyk/protect": "latest"
   }
 }
